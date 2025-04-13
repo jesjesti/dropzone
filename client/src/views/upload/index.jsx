@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import Grid from "@mui/material/Grid";
-import { uploadFile } from "../../core/API";
+//import { uploadFile } from "../../core/API";
 import { Snackbar, Alert } from "@mui/material";
-//import axios from "axios";
+import axios from "axios";
+import CircularProgressWithLabel from "../components/circularprogress/index";
 
 export default function UploadFiles(props) {
   const [files, setFiles] = useState([]);
@@ -45,8 +46,7 @@ export default function UploadFiles(props) {
     setFileStatus(fileObject, "IN-PROGRESS");
     const formData = new FormData();
     formData.append("file", fileObject.file);
-    formData.append("filename", fileObject.name);
-    uploadFile(formData)
+    uploadFile(formData, fileObject.name)
       .then((res) => {
         showMessage("Uploaded successfully", "success");
         setFileStatus(fileObject, "COMPLETED");
@@ -74,6 +74,32 @@ export default function UploadFiles(props) {
     if (mb < 1024) return mb.toFixed(2) + " MB";
     const gb = mb / 1024;
     return gb.toFixed(2) + " GB";
+  };
+
+  const uploadFile = async (formData, fileName) => {
+    try {
+      const response = await axios.post(
+        "/api/upload?filename=" + fileName,
+        formData,
+        {
+          onUploadProgress: (event) => {
+            const percent = Math.round((event.loaded * 100) / event.total);
+            setFileUploadProgress(fileName, percent);
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const setFileUploadProgress = (fileName, progressVal) => {
+    setFiles((prevFiles) =>
+      prevFiles.map((file) =>
+        file.name === fileName ? { ...file, progress: progressVal } : file
+      )
+    );
   };
 
   return (
@@ -161,7 +187,11 @@ export default function UploadFiles(props) {
                     </a>
                   )}
                   {file.status === "COMPLETED" && <b>Uploaded</b>}
-                  {file.status === "IN-PROGRESS" && <b>In Progress</b>}
+                  {file.status === "IN-PROGRESS" && (
+                    <div>
+                      <CircularProgressWithLabel value={file.progress} />
+                    </div>
+                  )}
                   {file.status === "ERROR" && <b>Error while uploading</b>}
                 </td>
               </tr>

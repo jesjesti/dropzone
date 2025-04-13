@@ -13,7 +13,45 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, "dist")));
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-const upload = multer({ storage: multer.memoryStorage() });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    if (!req.cleanedFileName) {
+      return cb(new Error("Filename is required"));
+    }
+    cb(null, req.cleanedFileName);
+  },
+});
+const upload = multer({ storage });
+
+const validateUploadFile = (req, res, next) => {
+  const customName = req.query.filename;
+  if (!customName) {
+    return res.status(400).json({
+      statusMessage: "Filename is required",
+      statusCode: 500,
+      data: null,
+    });
+  }
+
+  const cleanName = customName.replace(/[^a-z0-9_\-\.]/gi, "_");
+  const filePath = path.join(uploadDir, cleanName);
+
+  if (fs.existsSync(filePath)) {
+    return res.status(409).json({
+      statusMessage: "File with the same name already exists",
+      statusCode: 500,
+      data: null,
+    });
+  }
+
+  // Attach to request object for reuse in storage logic
+  req.cleanedFileName = cleanName;
+  next();
+};
 
 app.get("/api/list", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
@@ -37,40 +75,18 @@ app.get("/api/list", (req, res) => {
   });
 });
 
-app.post("/api/upload", upload.single("file"), (req, res) => {
-  const customName = req.body.filename;
-  console.log("New file upload request received", customName);
-  if (!customName) {
-    return res.status(400).json({
-      statusMessage: "File name is required",
-      statusCode: 500,
-      data: null,
+app.post(
+  "/api/upload",
+  validateUploadFile,
+  upload.single("file"),
+  (req, res) => {
+    res.json({
+      statusMessage: "File uploaded successfully",
+      statusCode: 200,
+      data: req.cleanedFileName,
     });
   }
-
-  // Sanitize filename
-  const cleanName = customName.replace(/[^a-z0-9_\-\.]/gi, "_");
-  const filePath = path.join(uploadDir, cleanName);
-
-  if (fs.existsSync(filePath)) {
-    return res.status(409).json({
-      statusMessage: "File with the same name already exists",
-      statusCode: 500,
-      data: null,
-    });
-  }
-
-  fs.writeFile(filePath, req.file.buffer, (err) => {
-    if (err) {
-      return res.status(500).json({
-        statusMessage: "Failed to save file",
-        statusCode: 500,
-        data: null,
-      });
-    }
-    res.json({ statusMessage: "Success", statusCode: 200, data: cleanName });
-  });
-});
+);
 
 app.delete("/api/delete", (req, res) => {
   const fileName = req.query.name;

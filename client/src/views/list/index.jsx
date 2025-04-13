@@ -19,6 +19,7 @@ export default function ListFiles(props) {
     messageType: "",
     show: false,
   });
+  const SERVICE_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
     console.log("File fteching");
@@ -148,7 +149,7 @@ export default function ListFiles(props) {
                         View
                       </a>
                       <a
-                        href={"http://192.168.1.6:3001/api/view/" + file.name}
+                        href={SERVICE_ENDPOINT + "/api/view/" + file.name}
                         style={{
                           color: "#1976d2",
                           textDecoration: "underline",
