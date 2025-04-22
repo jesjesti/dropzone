@@ -82,6 +82,7 @@ export default function UploadFiles(props) {
         "/api/upload?filename=" + fileName,
         formData,
         {
+          timeout: 0, // disables timeout
           onUploadProgress: (event) => {
             const percent = Math.round((event.loaded * 100) / event.total);
             setFileUploadProgress(fileName, percent);

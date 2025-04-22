@@ -207,7 +207,9 @@ app.get("/", function (req, res) {
   res.sendFile("index.html", { root: path.join(__dirname, "dist") });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   let ip = getLocalIpAddress();
   console.log("Server running at http://" + ip + ":" + PORT);
 });
+
+server.timeout = 0;
