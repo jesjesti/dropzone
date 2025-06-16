@@ -87,7 +87,7 @@ The frontend will be available at `http://localhost:5173`, and the backend API a
 ### Build the Frontend
 
 ```bash
-cd frontend
+cd client
 npm run build
 ```
 

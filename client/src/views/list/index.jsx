@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
-import { getFilesList, deleteFile } from "../../core/API";
+import { getFilesList, deleteFile, convertFile } from "../../core/API";
 import { Snackbar, Alert } from "@mui/material";
 import ViewFile from "../preview/index";
 import Button from "@mui/material/Button";
@@ -44,6 +44,21 @@ export default function ListFiles(props) {
 
   const refreshList = () => {
     getFileList();
+  };
+
+  const convertFileToCompatibleFormat = (fileName) => {
+    convertFile(fileName)
+      .then((res) => {
+        showMessage(
+          "Conversion initiated, refresh list to see progress",
+          "success"
+        );
+        getFileList();
+      })
+      .catch((err) => {
+        console.error("Error while converting file:", err);
+        showMessage(err.response.data.statusMessage, "error");
+      });
   };
 
   const getFileList = () => {
@@ -174,6 +189,20 @@ export default function ListFiles(props) {
                         }}
                       >
                         Remove
+                      </a>
+                      <a
+                        onClick={() => {
+                          convertFileToCompatibleFormat(file.name);
+                        }}
+                        style={{
+                          color: "#1976d2",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                          marginLeft: "8px",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Convert
                       </a>
                     </td>
                   </tr>
