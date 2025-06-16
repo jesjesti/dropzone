@@ -80,6 +80,8 @@ node index.js
 
 The frontend will be available at `http://localhost:5173`, and the backend API at `http://localhost:3001`.
 
+Important Note: If you are running client and server seperatly, you may be get CORS issue while playing multimedia files or privew of PDF and all.
+
 ---
 
 ## 📦 Production Build
@@ -87,7 +89,7 @@ The frontend will be available at `http://localhost:5173`, and the backend API a
 ### Build the Frontend
 
 ```bash
-cd frontend
+cd client
 npm run build
 ```
 

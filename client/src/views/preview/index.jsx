@@ -1,13 +1,11 @@
 import Grid from "@mui/material/Grid";
 
 export default function ViewFile(props) {
-  const SERVICE_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;
-
   const renderPreview = (fileObject) => {
     if (fileObject == null) {
       return <div>No file found for display</div>;
     } else {
-      const fileUrl = `${SERVICE_ENDPOINT}/api/view/${fileObject.name}`;
+      const fileUrl = `${props.serviceEndPoint}/api/view/${fileObject.name}`;
 
       const mediaStyle = {
         width: "100%",

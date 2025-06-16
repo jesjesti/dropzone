@@ -52,6 +52,19 @@ export const deleteFile = async (fileName) => {
   }
 };
 
+export const convertFile = async (fileName) => {
+  try {
+    const response = await axios.put("/api/convert/" + fileName, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const uploadFile = async (body) => {
   try {
     const response = await axios.post("/api/upload", body);

@@ -5,6 +5,10 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 const mime = require("mime-types");
+const { v4: uuidv4 } = require("uuid");
+const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
+const ffmpeg = require("fluent-ffmpeg");
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 const PORT = 3001;
@@ -53,6 +57,36 @@ const validateUploadFile = (req, res, next) => {
   next();
 };
 
+const convertToMp4 = (fileName) => {
+  const inputFile = path.join(uploadDir, fileName);
+  let outputFile = path.join(uploadDir, fileName.replace(/\.[^/.]+$/, ".mp4"));
+  if (fs.existsSync(outputFile)) {
+    outputFile = path.join(uploadDir, uuidv4() + ".mp4");
+  }
+
+  ffmpeg(inputFile)
+    .videoCodec("libx264")
+    .audioCodec("aac")
+    .outputOptions([
+      "-crf",
+      "18",
+      "-preset",
+      "slow",
+      "-b:a",
+      "192k",
+      "-movflags",
+      "+faststart",
+    ])
+    .on("start", (cmd) => console.log("FFmpeg command:", cmd))
+    .on("progress", (p) => {
+      const outputFileSize = formatFileSize(p.targetSize, "kilobytes");
+      console.log(`Current output size: ${outputFileSize}`);
+    })
+    .on("end", () => console.log("Conversion finished!"))
+    .on("error", (err) => console.error("Error:", err.message))
+    .save(outputFile);
+};
+
 app.get("/api/list", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
     if (err)
@@ -66,7 +100,7 @@ app.get("/api/list", (req, res) => {
       const stat = fs.statSync(fullPath);
       return {
         fileName: file,
-        fileSize: formatFileSize(stat.size), // in bytes
+        fileSize: formatFileSize(stat.size, "bytes"), // in bytes
         fileType: normalizeMime(mime.lookup(file)) || "unknown", // eg: image/png, application/pdf
       };
     });
@@ -120,6 +154,16 @@ app.delete("/api/delete", (req, res) => {
       statusCode: 500,
       data: null,
     });
+  });
+});
+
+app.put("/api/convert/:fileName", (req, res) => {
+  const fileName = req.params.fileName;
+  convertToMp4(fileName);
+  res.json({
+    statusMessage: "Success",
+    statusCode: 200,
+    data: "Coversion initiated! Please refresh the list files after some time!",
   });
 });
 
@@ -188,9 +232,12 @@ function getLocalIpAddress() {
   return "localhost"; // fallback
 }
 
-const formatFileSize = (bytes) => {
-  if (bytes < 1024) return bytes + " B";
-  const kb = bytes / 1024;
+const formatFileSize = (value, type) => {
+  let kb = value;
+  if (type === "bytes") {
+    if (value < 1024) return value + " B";
+    kb = value / 1024;
+  }
   if (kb < 1024) return kb.toFixed(2) + " KB";
   const mb = kb / 1024;
   if (mb < 1024) return mb.toFixed(2) + " MB";
