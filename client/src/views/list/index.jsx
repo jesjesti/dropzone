@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
-import { getFilesList, deleteFile, convertFile } from "../../core/API";
+import {
+  getFilesList,
+  deleteFile,
+  convertFile,
+  getAccesInfo,
+} from "../../core/API";
 import { Snackbar, Alert } from "@mui/material";
 import ViewFile from "../preview/index";
 import Button from "@mui/material/Button";
@@ -19,11 +24,20 @@ export default function ListFiles(props) {
     messageType: "",
     show: false,
   });
-  const SERVICE_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;
+  const [serviceEndPoint, setServiceEndPoint] = useState("");
+  //const SERVICE_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;
 
   useEffect(() => {
     console.log("File fteching");
     getFileList();
+
+    getAccesInfo()
+      .then((res) => {
+        setServiceEndPoint(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching access info:", err);
+      });
   }, []);
 
   const showMessage = (text, type) => {
@@ -164,7 +178,7 @@ export default function ListFiles(props) {
                         View
                       </a>
                       <a
-                        href={SERVICE_ENDPOINT + "/api/view/" + file.name}
+                        href={serviceEndPoint + "/api/view/" + file.name}
                         style={{
                           color: "#1976d2",
                           textDecoration: "underline",
@@ -217,6 +231,7 @@ export default function ListFiles(props) {
         <ViewFile
           setPreviewFile={setPreviewFile}
           fileObject={prviewFile}
+          serviceEndPoint={serviceEndPoint}
         ></ViewFile>
       )}
 
