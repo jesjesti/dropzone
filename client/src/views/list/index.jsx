@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Grid from "@mui/material/Grid";
 import {
   getFilesList,
   deleteFile,
@@ -8,12 +7,19 @@ import {
 } from "../../core/API";
 import { Snackbar, Alert } from "@mui/material";
 import ViewFile from "../preview/index";
-import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import {
+  useMediaQuery,
+  useTheme,
+  Button,
+  Grid,
+  Typography,
+  Paper,
+} from "@mui/material";
 
 export default function ListFiles(props) {
   const [files, setFiles] = useState([]);
@@ -26,6 +32,8 @@ export default function ListFiles(props) {
   });
   const [serviceEndPoint, setServiceEndPoint] = useState("");
   //const SERVICE_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     console.log("File fteching");
@@ -112,117 +120,160 @@ export default function ListFiles(props) {
           <Grid container>
             <Grid sx={{ xs: 4 }}></Grid>
             <Grid sx={{ xs: 4 }}>
-              <button
+              <Button
+                variant="outlined"
                 id="backHomeBtn"
                 onClick={() => {
                   props.setActiveView("HOME");
                 }}
               >
                 Home
-              </button>
+              </Button>
             </Grid>
             <Grid sx={{ xs: 4 }}></Grid>
           </Grid>
 
           <Grid container justifyContent="center" alignItems="center">
-            <table style={{ width: "100%", marginTop: "20px" }} border={1}>
-              <thead>
-                <tr>
-                  <th style={{ width: "20%", textAlign: "left" }}>
-                    📋 File Name
-                  </th>
-                  <th style={{ width: "5%", textAlign: "left" }}>🔖 Type</th>
-                  <th style={{ width: "5%", textAlign: "left" }}>📦 Size</th>
-                  <th style={{ width: "10%", textAlign: "center" }}>
-                    ⚙️ Action{" "}
-                    <a
-                      onClick={refreshList}
-                      style={{
-                        color: "#1976d2",
-                        textDecoration: "underline",
-                        cursor: "pointer",
-                        marginLeft: "8px",
-                        fontSize: "14px",
-                      }}
-                    >
-                      Refresh
-                    </a>
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="fileTableBody">
+            {isMobile ? (
+              <Grid container spacing={2} style={{ marginTop: "30px" }}>
                 {files.map((file, index) => (
-                  <tr key={index}>
-                    <td style={{ width: "15%", textAlign: "left" }}>
-                      {file.name}
-                    </td>
-                    <td style={{ width: "10%", textAlign: "left" }}>
-                      {file.type}
-                    </td>
-                    <td style={{ width: "10%", textAlign: "left" }}>
-                      {file.size}
-                    </td>
-                    <td style={{ width: "10%" }}>
-                      <a
-                        onClick={() => {
-                          setPreviewFile(file);
-                        }}
+                  <Grid item xs={12} key={index}>
+                    <Paper elevation={2} style={{ padding: "10px" }}>
+                      <Typography
+                        variant="subtitle2"
                         style={{
-                          color: "#1976d2",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                          marginLeft: "8px",
-                          fontSize: "14px",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
                         }}
                       >
-                        View
-                      </a>
-                      <a
-                        href={serviceEndPoint + "/api/view/" + file.name}
-                        style={{
-                          color: "#1976d2",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                          marginLeft: "8px",
-                          fontSize: "14px",
-                        }}
-                        download
-                      >
-                        Download
-                      </a>
-                      <a
-                        onClick={() => {
-                          setDeleteAlert({ show: true, filename: file.name });
-                        }}
-                        style={{
-                          color: "#1976d2",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                          marginLeft: "8px",
-                          fontSize: "14px",
-                        }}
-                      >
-                        Remove
-                      </a>
-                      <a
-                        onClick={() => {
-                          convertFileToCompatibleFormat(file.name);
-                        }}
-                        style={{
-                          color: "#1976d2",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                          marginLeft: "8px",
-                          fontSize: "14px",
-                        }}
-                      >
-                        Convert
-                      </a>
-                    </td>
-                  </tr>
+                        📋 {file.name}
+                      </Typography>
+                      <Typography variant="body2">🔖 {file.type}</Typography>
+                      <Typography variant="body2">📦 {file.size}</Typography>
+                      <div style={{ marginTop: 8 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => setPreviewFile(file)}
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() =>
+                            setDeleteAlert({ show: true, filename: file.name })
+                          }
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                        >
+                          Remove
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() =>
+                            convertFileToCompatibleFormat(file.name)
+                          }
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                        >
+                          Convert
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          component="a"
+                          href={serviceEndPoint + "/api/view/" + file.name}
+                          download
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                        >
+                          Download
+                        </Button>
+                      </div>
+                    </Paper>
+                  </Grid>
                 ))}
-              </tbody>
-            </table>
+              </Grid>
+            ) : (
+              <table style={{ width: "100%", marginTop: "20px" }} border={1}>
+                <thead>
+                  <tr>
+                    <th style={{ width: "20%", textAlign: "left" }}>
+                      📋 File Name
+                    </th>
+                    <th style={{ width: "5%", textAlign: "left" }}>🔖 Type</th>
+                    <th style={{ width: "5%", textAlign: "left" }}>📦 Size</th>
+                    <th style={{ width: "10%", textAlign: "center" }}>
+                      ⚙️ Action
+                      <Button
+                        style={{ marginLeft: "10px" }}
+                        variant="outlined"
+                        id="btnRefreshAll"
+                        onClick={refreshList}
+                      >
+                        Refresh
+                      </Button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="fileTableBody">
+                  {files.map((file, index) => (
+                    <tr key={index}>
+                      <td style={{ width: "15%", textAlign: "left" }}>
+                        {file.name}
+                      </td>
+                      <td style={{ width: "10%", textAlign: "left" }}>
+                        {file.type}
+                      </td>
+                      <td style={{ width: "10%", textAlign: "left" }}>
+                        {file.size}
+                      </td>
+                      <td style={{ width: "10%" }}>
+                        <Button
+                          style={{
+                            marginLeft: 8,
+                            minWidth: 120,
+                            marginTop: 8,
+                          }}
+                          variant="outlined"
+                          id="btnRefreshAll"
+                          onClick={() => {
+                            setPreviewFile(file);
+                          }}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                          variant="outlined"
+                          id="btnRefreshAll"
+                          onClick={() => {
+                            setDeleteAlert({ show: true, filename: file.name });
+                          }}
+                        >
+                          Remove
+                        </Button>
+                        <Button
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                          variant="outlined"
+                          id="btnRefreshAll"
+                          onClick={() => {
+                            convertFileToCompatibleFormat(file.name);
+                          }}
+                        >
+                          Convert
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          component="a"
+                          href={serviceEndPoint + "/api/view/" + file.name}
+                          download
+                          style={{ marginLeft: 8, minWidth: 120, marginTop: 8 }}
+                        >
+                          Download
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </Grid>
         </div>
       )}

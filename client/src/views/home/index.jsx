@@ -4,6 +4,7 @@ import ListFiles from "../list/index";
 import UploadFiles from "../upload/index";
 import { getAccesInfo } from "../../core/API";
 import { QRCodeCanvas } from "qrcode.react";
+import Button from "@mui/material/Button";
 
 export default function App() {
   const [activeView, setActiveView] = useState("HOME");
@@ -26,23 +27,25 @@ export default function App() {
           <h1>📂 Drop Zone</h1>
 
           <div>
-            <button
+            <Button
+              variant="outlined"
               id="listBtn"
               onClick={() => {
                 setActiveView("LIST");
               }}
             >
               📋 List Files
-            </button>
+            </Button>
             <span style={{ margin: "10px" }}></span>
-            <button
+            <Button
+              variant="outlined"
               id="uploadBtn"
               onClick={() => {
                 setActiveView("UPLOAD");
               }}
             >
               ⬆️ Upload files
-            </button>
+            </Button>
           </div>
           <br />
           <br />
