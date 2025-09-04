@@ -73,3 +73,25 @@ export const uploadFile = async (body) => {
     throw error;
   }
 };
+
+export const getWhiteBoardContent = async () => {
+  try {
+    const response = await axios.get("/api/whiteboard/content", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const saveWhiteBoardContent = async (body) => {
+  try {
+    const response = await axios.post("/api/whiteboard/content", body);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

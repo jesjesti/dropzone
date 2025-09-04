@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -8,16 +8,80 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import { getWhiteBoardContent, saveWhiteBoardContent } from "../../core/API";
 
 export default function Whiteboard() {
-  const [text, setText] = useState("");
+  const [content, setContent] = useState("");
   const [clearAlert, setClearAlert] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const eventSourceRef = useRef(null);
+
+  const connect = () => {
+    if (eventSourceRef.current) return; // already connected
+    const es = new EventSource("/api/whiteboard/events");
+
+    es.addEventListener("CONTENT_UPDATE_NOTIFICATION", () => {
+      console.log("Content update notification received");
+      fetchContent();
+    });
+
+    es.onerror = () => {
+      console.error("EventSource error");
+      es.close();
+      eventSourceRef.current = null;
+      setConnected(false);
+    };
+
+    es.onopen = () => {
+      console.log("Connected to SSE");
+      setConnected(true);
+    };
+
+    eventSourceRef.current = es;
+  };
+
+  const disconnect = () => {
+    if (eventSourceRef.current) {
+      console.log("Disconnecting from SSE...");
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+      setConnected(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+    connect(); // auto connect when component mounts
+    return () => disconnect(); // auto cleanup
+  }, []);
+
+  const fetchContent = async () => {
+    getWhiteBoardContent()
+      .then((res) => {
+        setContent(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching white board content:", err);
+      });
+  };
 
   const handleClearAlertAction = (type) => {
     if (type == "YES") {
-      setText("");
+      setContent("");
     }
     setClearAlert(false);
+  };
+
+  const saveContent = () => {
+    const formData = new FormData();
+    formData.append("content", content);
+    saveWhiteBoardContent(formData)
+      .then((res) => {
+        console.log("White board content saved successfully");
+      })
+      .catch((err) => {
+        console.error("Error saving white board content:", err);
+      });
   };
 
   return (
@@ -62,8 +126,8 @@ export default function Whiteboard() {
             label="Type here..."
             multiline
             rows={20}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
             sx={{
               width: "100%",
               bgcolor: "#fff",
@@ -80,15 +144,14 @@ export default function Whiteboard() {
               mt: 2,
             }}
           >
+            <h3>
+              Content sharing network connection:{" "}
+              {connected ? "🟢 Active" : "🔴 Disconnected"}
+            </h3>
             <Button variant="outlined" onClick={() => setClearAlert(true)}>
               Clear
             </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                // Save logic here
-              }}
-            >
+            <Button variant="contained" onClick={saveContent}>
               Save
             </Button>
           </Box>
