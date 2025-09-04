@@ -10,7 +10,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { getWhiteBoardContent, saveWhiteBoardContent } from "../../core/API";
 
-export default function Whiteboard() {
+export default function Whiteboard(props) {
   const [content, setContent] = useState("");
   const [clearAlert, setClearAlert] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -25,6 +25,11 @@ export default function Whiteboard() {
       fetchContent();
     });
 
+    es.addEventListener("CONNECTED", () => {
+      console.log("SSE connection established");
+      setConnected(true);
+    });
+
     es.onerror = () => {
       console.error("EventSource error");
       es.close();
@@ -32,10 +37,10 @@ export default function Whiteboard() {
       setConnected(false);
     };
 
-    es.onopen = () => {
+    /*es.onopen = () => {
       console.log("Connected to SSE");
       setConnected(true);
-    };
+    };*/
 
     eventSourceRef.current = es;
   };
@@ -73,9 +78,8 @@ export default function Whiteboard() {
   };
 
   const saveContent = () => {
-    const formData = new FormData();
-    formData.append("content", content);
-    saveWhiteBoardContent(formData)
+    const body = { content: content };
+    saveWhiteBoardContent(body)
       .then((res) => {
         console.log("White board content saved successfully");
       })
@@ -144,7 +148,7 @@ export default function Whiteboard() {
               mt: 2,
             }}
           >
-            <h3>
+            <h3 style={{ color: "black", fontSize: "10px" }}>
               Content sharing network connection:{" "}
               {connected ? "🟢 Active" : "🔴 Disconnected"}
             </h3>

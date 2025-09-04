@@ -14,6 +14,7 @@ const { randomUUID } = require("crypto");
 const app = express();
 const PORT = 3001;
 app.use(cors());
+app.use(express.json()); // to support JSON-encoded bodies
 
 let whiteBoardClients = [];
 
@@ -233,6 +234,8 @@ app.get("/api/whiteboard/events", (req, res) => {
   const newClient = { id: clientId, res };
   whiteBoardClients.push(newClient);
 
+  res.write(`event: CONNECTED\ndata: { "status": "ok" }\n\n`);
+
   req.on("close", () => {
     console.log(`${clientId} connection closed`);
     whiteBoardClients = whiteBoardClients.filter((c) => c.id !== clientId);
@@ -253,7 +256,7 @@ app.post("/api/whiteboard/content", (req, res) => {
   fs.writeFileSync(contentFilePath, content, "utf8");
 
   // Instead of sending message data → just notify
-  clients.forEach((client) =>
+  whiteBoardClients.forEach((client) =>
     client.res.write(`event: CONTENT_UPDATE_NOTIFICATION\ndata: {}\n\n`)
   );
 
