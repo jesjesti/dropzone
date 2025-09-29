@@ -5,6 +5,7 @@ import Grid from "@mui/material/Grid";
 import { Snackbar, Alert } from "@mui/material";
 import axios from "axios";
 import CircularProgressWithLabel from "../components/circularprogress/index";
+import Button from "@mui/material/Button";
 
 export default function UploadFiles(props) {
   const [files, setFiles] = useState([]);
@@ -108,14 +109,15 @@ export default function UploadFiles(props) {
       <Grid container>
         <Grid sx={{ xs: 4 }}></Grid>
         <Grid sx={{ xs: 4 }}>
-          <button
+          <Button
+            variant="outlined"
             id="backHomeBtn"
             onClick={() => {
               props.setActiveView("HOME");
             }}
           >
             Home
-          </button>
+          </Button>
         </Grid>
         <Grid sx={{ xs: 4 }}></Grid>
       </Grid>
@@ -148,18 +150,13 @@ export default function UploadFiles(props) {
               <th style={{ width: "5%", textAlign: "center" }}>📦 Size</th>
               <th style={{ width: "5%", textAlign: "center" }}>
                 ⚙️ Action {""}
-                <a
+                <Button
+                  variant="outlined"
+                  id="backHomeBtn"
                   onClick={uploadAllFiles}
-                  style={{
-                    color: "#1976d2",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    marginLeft: "8px",
-                    fontSize: "14px",
-                  }}
                 >
                   Upload All
-                </a>
+                </Button>
               </th>
             </tr>
           </thead>
@@ -172,20 +169,15 @@ export default function UploadFiles(props) {
                 </td>
                 <td style={{ width: "5%" }}>
                   {file.status === "PENDING" && (
-                    <a
+                    <Button
+                      variant="outlined"
+                      id="backHomeBtn"
                       onClick={() => {
                         uploadSingleFile(file);
                       }}
-                      style={{
-                        color: "#1976d2",
-                        textDecoration: "underline",
-                        cursor: "pointer",
-                        marginLeft: "8px",
-                        fontSize: "14px",
-                      }}
                     >
                       Upload
-                    </a>
+                    </Button>
                   )}
                   {file.status === "COMPLETED" && <b>Uploaded</b>}
                   {file.status === "IN-PROGRESS" && (

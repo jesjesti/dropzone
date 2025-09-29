@@ -9,10 +9,14 @@ const { v4: uuidv4 } = require("uuid");
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 const ffmpeg = require("fluent-ffmpeg");
 ffmpeg.setFfmpegPath(ffmpegPath);
+const { randomUUID } = require("crypto");
 
 const app = express();
 const PORT = 3001;
 app.use(cors());
+app.use(express.json()); // to support JSON-encoded bodies
+
+let whiteBoardClients = [];
 
 app.use(express.static(path.join(__dirname, "dist")));
 const uploadDir = path.join(__dirname, "uploads");
@@ -217,6 +221,58 @@ app.get("/api/view/:fileName", (req, res) => {
 app.get("/api/access-info", (req, res) => {
   let accessURL = "http://" + getLocalIpAddress() + ":3001";
   res.json({ statusMessage: "Success", statusCode: 200, data: accessURL });
+});
+
+// SSE connection
+app.get("/api/whiteboard/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const clientId = randomUUID();
+  const newClient = { id: clientId, res };
+  whiteBoardClients.push(newClient);
+
+  res.write(`event: CONNECTED\ndata: { "status": "ok" }\n\n`);
+
+  req.on("close", () => {
+    console.log(`${clientId} connection closed`);
+    whiteBoardClients = whiteBoardClients.filter((c) => c.id !== clientId);
+  });
+});
+
+// REST API: send a message
+app.post("/api/whiteboard/content", (req, res) => {
+  const content = req.body.content;
+
+  const whiteboardDir = path.join(__dirname, "whiteboard");
+  const contentFilePath = path.join(whiteboardDir, "content.txt");
+
+  if (!fs.existsSync(whiteboardDir)) {
+    fs.mkdirSync(whiteboardDir);
+  }
+
+  fs.writeFileSync(contentFilePath, content, "utf8");
+
+  // Instead of sending message data → just notify
+  whiteBoardClients.forEach((client) =>
+    client.res.write(`event: CONTENT_UPDATE_NOTIFICATION\ndata: {}\n\n`)
+  );
+
+  res.status(201).json({ success: true });
+});
+
+app.get("/api/whiteboard/content", (req, res) => {
+  const whiteboardDir = path.join(__dirname, "whiteboard");
+  const contentFilePath = path.join(whiteboardDir, "content.txt");
+  let content = "";
+
+  if (fs.existsSync(contentFilePath)) {
+    content = fs.readFileSync(contentFilePath, "utf8");
+  }
+
+  res.json({ statusMessage: "Success", statusCode: 200, data: content });
 });
 
 function getLocalIpAddress() {

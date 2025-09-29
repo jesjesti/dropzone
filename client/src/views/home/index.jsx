@@ -2,8 +2,10 @@ import "./index.css";
 import { useState, useEffect } from "react";
 import ListFiles from "../list/index";
 import UploadFiles from "../upload/index";
+import Whiteboard from "../whiteboard";
 import { getAccesInfo } from "../../core/API";
 import { QRCodeCanvas } from "qrcode.react";
+import Button from "@mui/material/Button";
 
 export default function App() {
   const [activeView, setActiveView] = useState("HOME");
@@ -23,26 +25,38 @@ export default function App() {
     <>
       {activeView === "HOME" && (
         <div>
-          <h1>📂 Drop Zone</h1>
+          <h1>📮 Drop Zone</h1>
 
           <div>
-            <button
+            <Button
+              variant="outlined"
               id="listBtn"
               onClick={() => {
                 setActiveView("LIST");
               }}
             >
-              📋 List Files
-            </button>
+              📂 List Files
+            </Button>
             <span style={{ margin: "10px" }}></span>
-            <button
+            <Button
+              variant="outlined"
               id="uploadBtn"
               onClick={() => {
                 setActiveView("UPLOAD");
               }}
             >
               ⬆️ Upload files
-            </button>
+            </Button>
+            <span style={{ margin: "10px" }}></span>
+            <Button
+              variant="outlined"
+              id="whiteBoardBtn"
+              onClick={() => {
+                setActiveView("WHITEBOARD");
+              }}
+            >
+              📝 White Board
+            </Button>
           </div>
           <br />
           <br />
@@ -58,6 +72,9 @@ export default function App() {
       )}
       {activeView === "LIST" && <ListFiles setActiveView={setActiveView} />}
       {activeView === "UPLOAD" && <UploadFiles setActiveView={setActiveView} />}
+      {activeView === "WHITEBOARD" && (
+        <Whiteboard setActiveView={setActiveView} />
+      )}
     </>
   );
 }
